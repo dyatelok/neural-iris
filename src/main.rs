@@ -89,7 +89,7 @@ impl NN {
         let mut outputs : Vec<Matrix<f32>> = Vec::new();
         for i in 0..data.len() {
             inputs.push(matrix!(data[i].0, data[i].1, data[i].2, data[i].3));
-            outputs.push(to_output(data[i].4.clone()));
+            outputs.push(to_output(&data[i].4.clone()[..]));
         }
 
         //повторяем структуру нейросети в этом блоке
@@ -160,6 +160,7 @@ impl NN {
                 }
             }
             acc /= data.len() as f32;
+            println!("{}",acc);
         }
     }
     fn compute(&self, input : Matrix<f32>) -> Matrix<f32> {
@@ -199,15 +200,11 @@ impl NN {
     }
 }
 
-fn to_output(s : String) -> Matrix<f32> {
-    let setosa = "setosa".to_string();
-    let versicolor = "versicolor".to_string();
-    let virginica = "virginica".to_string();
-
+fn to_output(s : &str) -> Matrix<f32> {
     match s {
-        setosa     => {return matrix!(1.0, 0.0, 0.0);}
-        versicolor => {return matrix!(0.0, 1.0, 0.0);}
-        virginica  => {return matrix!(0.0, 0.0, 1.0);}
+        "setosa"     => {return matrix!(1.0, 0.0, 0.0);}
+        "versicolor" => {return matrix!(0.0, 1.0, 0.0);}
+        "virginica"  => {return matrix!(0.0, 0.0, 1.0);}
         _ => {panic!("no such flower type");}
     }
 }
@@ -234,61 +231,20 @@ fn main() {
     println!("{}",out);*/
     let mut pos : u32 = 0;
     V.shuffle(&mut thread_rng());
-    Netw.data_train(&V,0.002,0.001,0.0002);
+  
+    Netw.data_train(&V,0.002,0.001,0.001);
     
-    for o in 0..100 {
+    for o in 0..150 {
+        println!("{}: '{}'",o,V[o].4);
+
         let input  = matrix!(V[o].0, V[o].1, V[o].2, V[o].3);
         let out = Netw.compute(input);
         
+        println!("{}",out.clone());
+        println!("{}",to_output(&V[o].4[..]));
+        println!();
+        
         if V[o].4 == to_ans(out.clone()) {pos+=1;}
     }
-    println!("{}%",pos);
+    println!("{}%",pos as f32 / 1.5);
 }
-/*fn train(&mut self, data : &Record, rate : f32, momentum : f32, accuracy : f32) {
-        let input  = matrix!(data.0, data.1, data.2, data.3);
-        let output = to_output(data.4.clone());
-
-        let mut w : Vec<Matrix<f32>> = Vec::new();
-        w.push(Matrix::zeros(4,6));
-        w.push(Matrix::zeros(6,6));
-        w.push(Matrix::zeros(6,3));
-        let mut acc = 1.0;
-        while acc > accuracy {
-            //Вычисляем выходы сети на определенных слоях
-            let mut inp = input.clone();
-            let mut x : Vec <Matrix<f32>> = Vec::new();
-            x.push(trans(4,1,inp.clone())); // вход
-            inp = self.Layers[0].compute(inp);
-            x.push(trans(6,1,inp.clone())); // выход 1 слоя 
-            inp = self.Layers[1].compute(inp);
-            x.push(trans(6,1,inp.clone())); // выход 2 слоя
-            inp = self.Layers[2].compute(inp);
-            x.push(trans(3,1,inp.clone())); // выход 3 слоя
-            
-            let mut W : Vec <Matrix<f32>> = vec!(Matrix::zeros(0,0);3);
-            
-            //Считаем изначальный градиент
-            let mut grad = trans(1,3,&x[3] - trans(3,1,output.clone()));
-            
-            //Считаем градиенты матриц на промежуточных слоях
-            W[2] = &x[2] * &grad;
-            grad = grad * trans(3,6,self.Layers[2].weights.clone());
-            W[1] = &x[1] * &grad;
-            grad = relu_der(6,grad);
-            grad = grad * trans(6,6,self.Layers[1].weights.clone());
-            W[0] = &x[0] * &grad;
-            
-            //Применяем градиенты для рассчета новых весов в сети
-            for j in 0..3 {
-                self.Layers[j].weights -= &W[j] * rate + &w[j] * momentum;
-            }
-            w = W;
-            
-            acc = 0.0;
-            let res = self.compute(input.clone());
-            for r in 0..3 {
-                acc += (res[[0,r]] - output[[0,r]]).powi(2);
-            }
-        }
-    }
-*/
