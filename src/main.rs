@@ -231,10 +231,13 @@ fn main() {
     println!("{}",out);*/
     let mut pos : u32 = 0;
     V.shuffle(&mut thread_rng());
-  
-    Netw.data_train(&V,0.002,0.001,0.001);
+    let mut W : Vec<Record> = Vec::new();
+    for v in &V {
+        W.push(v.clone());
+    }
+    Netw.data_train(&V,0.006,0.003,0.0005);
     
-    for o in 0..150 {
+    for o in 100..150 {
         println!("{}: '{}'",o,V[o].4);
 
         let input  = matrix!(V[o].0, V[o].1, V[o].2, V[o].3);
@@ -246,5 +249,5 @@ fn main() {
         
         if V[o].4 == to_ans(out.clone()) {pos+=1;}
     }
-    println!("{}%",pos as f32 / 1.5);
+    println!("{}%",pos as f32 / 0.5);
 }
